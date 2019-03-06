@@ -1,29 +1,30 @@
 // TODO: Move to var game
 const width = 800
 const height = 600
-const tileSize = 25
+const gridResolution = 25
 const TileType = Object.freeze({
   Empty: 0,
   Wall:  1,
 })
 
-const world = Array
-  .from({length: Math.floor(width / tileSize)})
+// TODO: alignedGrid.initialize(data)
+const alignedGrid = Array
+  .from({length: Math.floor(width / gridResolution)})
   .map(() =>
     Array
-      .from({length: Math.floor(height / tileSize)})
+      .from({length: Math.floor(height / gridResolution)})
       .map(() => TileType.Empty)
   )
 
 // DEBUG:
 function drawGrid(ctx) {
-  const col = Math.floor(width / tileSize)
-  const row = Math.floor(height / tileSize)
+  const col = Math.floor(width / gridResolution)
+  const row = Math.floor(height / gridResolution)
 
   ctx.beginPath()
   // draw rows
   for (let r = 0; r <= row; r++) {
-    const y = tileSize * r
+    const y = gridResolution * r
 
     ctx.moveTo(0, y)
     ctx.lineTo(width, y)
@@ -31,7 +32,7 @@ function drawGrid(ctx) {
 
   // draw columns
   for (let c = 0; c <= col; c++) {
-    const x = tileSize * c
+    const x = gridResolution * c
 
     ctx.moveTo(x, 0)
     ctx.lineTo(x, height)
@@ -44,14 +45,14 @@ function drawGrid(ctx) {
 // DEBUG:
 function drawTiles(ctx) {
   // TODO:
-  world.forEach((col, x) => {
+  alignedGrid.forEach((col, x) => {
     col.forEach((t, y) => {
       if (t === TileType.Empty) {
         // Do nothing
       }
       else if (t === TileType.Wall) {
         ctx.fillStyle = "grey"
-        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize)
+        ctx.fillRect(x * gridResolution, y * gridResolution, gridResolution, gridResolution)
       }
     });
   });
@@ -79,13 +80,13 @@ const dist = (a, b) => {
 
 const solveX = (y, a, b, c) => -(b * y + c) / a
 const solveY = (x, a, b, c) => -(a * x + c) / b
-const getX = (x0, i) => x0 + i * tileSize
-const getY = (y0, j) => y0 + j * tileSize
-const xToWorldIndex = x => Math.floor(x / tileSize)
-const yToWorldIndex = y => Math.floor(y / tileSize)
+const getX = (x0, i) => x0 + i * gridResolution
+const getY = (y0, j) => y0 + j * gridResolution
+const xToWorldIndex = x => Math.floor(x / gridResolution)
+const yToWorldIndex = y => Math.floor(y / gridResolution)
 // TODO: get rid of floating pt. comparison
-const isTopEdge = y => y % tileSize === 0
-const isSideEdge = x => x % tileSize === 0
+const isTopEdge = y => y % gridResolution === 0
+const isSideEdge = x => x % gridResolution === 0
 
 const getTileOrNull = (world, i, j) => {
   if (typeof world[i] === "undefined" || typeof world[i][j] === "undefined") {
@@ -187,8 +188,8 @@ function testHit(start, end, entities, ctx) {
   const b = end[0] - start[0]
   const c = -(a * start[0] + b * start[1])
   // Math.min so we can ascend from min to max
-  const x0 = getNextMultiple(Math.min(start[0], end[0]), tileSize)
-  const y0 = getNextMultiple(Math.min(start[1], end[1]), tileSize)
+  const x0 = getNextMultiple(Math.min(start[0], end[0]), gridResolution)
+  const y0 = getNextMultiple(Math.min(start[1], end[1]), gridResolution)
 
   // TODO: Refactor loops into a function
   let adj = []
@@ -197,7 +198,7 @@ function testHit(start, end, entities, ctx) {
     const y = solveY(x, a, b, c)
 
     adj = adj.concat(
-      getEdgeAdjacents(world, x, y)
+      getEdgeAdjacents(alignedGrid, x, y)
     )
   }
 
@@ -206,7 +207,7 @@ function testHit(start, end, entities, ctx) {
     const x = solveX(y, a, b, c)
 
     adj = adj.concat(
-      getEdgeAdjacents(world, x, y)
+      getEdgeAdjacents(alignedGrid, x, y)
     )
   }
 
@@ -275,7 +276,7 @@ function testHit(start, end, entities, ctx) {
     drawEnds(start, lim, ctx)
     drawIntersections(x0, y0, a, b, c)
     adj.forEach(v => {
-      markTile(v[2], v[3], tileSize)
+      markTile(v[2], v[3], gridResolution)
     })
   }
 
@@ -286,13 +287,13 @@ function testHit(start, end, entities, ctx) {
 // Set up tiles
 // DEBUG:
 for (let i = 4; i <= 12; i++) {
-  world[i][3] = TileType.Wall
-  world[i][11] = TileType.Wall
+  alignedGrid[i][3] = TileType.Wall
+  alignedGrid[i][11] = TileType.Wall
 }
 // DEBUG:
 for (let j = 4; j <= 10; j++) {
-  world[4][j] = TileType.Wall
-  world[12][j] = TileType.Wall
+  alignedGrid[4][j] = TileType.Wall
+  alignedGrid[12][j] = TileType.Wall
 }
 
 

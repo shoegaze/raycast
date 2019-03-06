@@ -186,7 +186,7 @@ const stepPlayer = (dt) => {
   player[1] = plyPos[1]
 
   // TODO: Get walls from tile neighbors
-  world
+  alignedGrid
     .filter(t => t[4] === TileType.Wall)
     .forEach(w => {
       // TODO:
@@ -243,17 +243,18 @@ const init = (mainCanvas, mainCtx) => {
     if (ev.key === DirKey.Down) {
      vertical += 1
     }
-    else if (ev.key === DirKey.Up) {
+
+    if (ev.key === DirKey.Up) {
       vertical -= 1
     }
-    else if (ev.key === DirKey.Right) {
+
+    if (ev.key === DirKey.Right) {
       horizontal += 1
     }
-    else if (ev.key === DirKey.Left) {
+
+    if (ev.key === DirKey.Left) {
       horizontal -= 1
     }
-
-    // ev.preventDefault()
   })
 
   window.addEventListener("keyup", ev => {
@@ -261,21 +262,21 @@ const init = (mainCanvas, mainCtx) => {
       return
     }
 
-    // keydown, but values negated
     if (ev.key === DirKey.Down) {
-      vertical -= 1
-    }
-    else if (ev.key === DirKey.Up) {
-      vertical += 1
-    }
-    else if (ev.key === DirKey.Right) {
-      horizontal -= 1
-    }
-    else if (ev.key === DirKey.Left) {
-      horizontal += 1
+      vertical = 0
     }
 
-    // ev.preventDefault()
+    if (ev.key === DirKey.Up) {
+      vertical = 0
+    }
+
+    if (ev.key === DirKey.Right) {
+      horizontal = 0
+    }
+
+    if (ev.key === DirKey.Left) {
+      horizontal = 0
+    }
   })
 
   mainCanvas.addEventListener("mousedown", ev => {

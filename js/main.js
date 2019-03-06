@@ -226,15 +226,12 @@ const startLoop = (t, c, ctx) => {
   window.requestAnimationFrame(loop.bind(loopContext))
 }
 
-const init = (mainCanvas, mainCtx, debugCanvas, debugCtx) => {
+const init = (mainCanvas, mainCtx) => {
   const refreshCanvas = () => {
     mainCanvas.setAttribute("width", `${window.innerWidth}px`)
     mainCanvas.setAttribute("height", `${window.innerHeight}px`)
   }
   refreshCanvas()
-
-  debugCanvas.setAttribute("width", `${300}px`)
-  debugCanvas.setAttribute("height", `${225}px`)
 
   shouldRedraw = true
 
@@ -289,7 +286,7 @@ const init = (mainCanvas, mainCtx, debugCanvas, debugCtx) => {
       player,
       add(player, scale(dir, range)),
       entities,
-      debugCtx
+      mainCtx
     )
 
     if (entity) {
@@ -302,43 +299,14 @@ const init = (mainCanvas, mainCtx, debugCanvas, debugCtx) => {
   // c.addEventListener("mousemove", updateDir)
 }
 
-const getScreens = (mainId, debugId) => {
-  // TODO: Error checking
-  return [
-    document.getElementById(mainId),
-    document.getElementById(debugId)
-  ]
-}
-
 function main() {
-  const [mainC, debugC] = getScreens("screen-main", "screen-debug")
+  const mainC = document.getElementById("screen-main")
   const mainCtx = mainC.getContext("2d")
-  const debugCtx = debugC? debugC.getContext("2d") : null
 
-  init(mainC, mainCtx, debugC, debugCtx)
+  init(mainC, mainCtx)
   startLoop(
     window.performance.now(),
     mainC,
-    mainCtx,
-    debugC,
-    debugCtx
+    mainCtx
   )
 }
-
-
-// TODO:
-// GAME = Object.freeze({
-//   init: function() {},
-//   main: () => {
-
-//   },
-
-
-// })
-
-// TODO:
-// const INPUT = {
-//   horizontal: 0,
-//   vertical: 0,
-//   shooting: false
-// }

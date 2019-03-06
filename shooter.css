@@ -7,4 +7,5 @@
 #screen-debug {
   position: static;
   right: 0;
+  pointer-events: none;
 }

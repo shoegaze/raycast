@@ -1,0 +1,10 @@
+.screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#screen-debug {
+  position: static;
+  right: 0;
+}

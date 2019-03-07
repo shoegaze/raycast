@@ -1,5 +1,5 @@
 // [x, y, left x offset, left y offset, right x offset, right y offset]
-let player = [25, 25, -10, -10, 10, 10]
+let player = new Player(new Vector2(25, 25), 20, 20)
 let range = 200
 let speed = 0.15
 
@@ -9,7 +9,7 @@ let vertical = 0
 
 let shouldRedraw = true
 
-let entities = [
+const entities = [
   // [
   //  x,
   //  y,
@@ -30,34 +30,6 @@ const DirKey = Object.freeze({
   Left: "a"
 })
 
-// Vector functions
-const magnitude = v => Math.sqrt(v[0] * v[0] + v[1] * v[1])
-const normalize = v => {
-  const m = magnitude(v)
-  return [v[0] / m, v[1] / m]
-} // scale(v, 1/magnitude(v))
-const scale = (v, s) => [s * v[0], s * v[1]] // v.map(e => s * e)
-const negate = v => scale(v, -1)
-const add = (v0, v1) => [v0[0] + v1[0], v0[1] + v1[1]] // v0.map((e, i) => e + v1[i])
-const sub = (v0, v1) => add(v0, negate(v1))
-const isZero = v => v[0] === 0 && v[1] === 0 // v.every(e => e === 0)
-// Assume range.x <= range.y
-const clampVector = (v, xRange, yRange) => {
-  const clampScalar = (s, range) => {
-    if (s < range[0]) {
-      return range[0]
-    }
-    if (s > range[1]) {
-      return range[1]
-    }
-
-    return s
-  }
-
-  return [clampScalar(v[0], xRange), clampScalar(v[1], yRange)]
-}
-
-
 // Draw functions:
 
 const clearScreen = (c, ctx) => {
@@ -65,19 +37,7 @@ const clearScreen = (c, ctx) => {
 }
 
 const drawPlayer = ctx => {
-
-  // Debug draw:
-  // TODO: Move to separate debug function
-  ctx.beginPath()
-  ctx.rect(
-    player[0] + player[2],
-    player[1] + player[3],
-    player[4] - player[2],
-    player[5] - player[3]
-  )
-  ctx.fillStyle = "green"
-  ctx.fill()
-  ctx.stroke()
+  player.draw(ctx)
 }
 
 const drawEntities = ctx => {
@@ -95,12 +55,13 @@ const drawEntities = ctx => {
   })
 }
 
-function draw(c, ctx) {
+function draw(c, ctx, dt) {
   if (shouldRedraw) {
     clearScreen(c, ctx)
     drawGrid(ctx)
     drawTiles(ctx)
-    drawPlayer(ctx)
+
+    player.draw(ctx)
     drawEntities(ctx)
 
     shouldRedraw = false
@@ -108,101 +69,41 @@ function draw(c, ctx) {
 }
 
 // Step functions:
-const resolveAabbCollision = (movingEntity, staticEntity, dr) => {
-  // TODO:
-  throw Error("Unimplemented function")
+const tryMove = (mover, dr) => {
+  const tryMoveInner = (r, dr) => {
+    const w = overlapsWall(r.add(dr))
+    if (w) {
+      const w1 = width(r), w2 = width(w)
+      const h1 = height(r), h2 = height(w)
 
-  const Side = Object.freeze({
-    None: {},
-    Top: {},
-    Bottom: {},
-    Left: {},
-    Right: {}
-  })
+      const maxDist = Math.sqrt(
+        (w1 + w2) ** 2 +
+        (h1 + h2) ** 2) / 2
 
-  const dx = staticEntity[0] - movingEntity[0]
-  const dy = staticEntity[1] - movingEntity[1]
+      const d = ((a, b) => {
+        const dx = b[0] - a[0]
+        const dy = b[1] - a[1]
+        return Math.sqrt(dx * dx + dy * dy)
+      })(r, w)
 
-  if (Math.abs(dx) > Math.abs(dy)) {
+      const n = getRectNormal(r, w)
+      // Check recursively if we intersect any other walls
+      tryMoveInner(r, dr + n * (maxDist - d))
+    }
 
-  }
-  else if (Math.abs(dx) < Math.abs(dy)) {
-
-  }
-  // Special case:
-  // dx = dy = 0
-
-  // else if () {}
-
-  // Special case:
-  // dx = dy = C
-
-  // else if () {}
-
-
-  // let sideRelAB = []
-  // if (dx > 0) {
-  //   sideRelAB[0] = Side.Left
-  // }
-  // else if (dx < 0) {
-  //   sideRelAB[0] = Side.Right
-  // }
-  // else {
-  //   sideRelAB[0] = Side.None
-  // }
-
-  // if (dy > 0) {
-
-  // }
-  // else if (dy < 0) {
-
-  // }
-  // else {
-
-  // }
-
-  return
-}
-
-const stepPlayer = (dt) => {
-  if (isZero([horizontal, vertical])) {
-    return
+    r = r.add(dr)
   }
 
-  const plyPos = clampVector(
-    add(
-      player,
-      scale(
-        normalize([horizontal, vertical]),
-        speed * dt
-      )
-    ),
-    // TODO: Retrieve canvas dimensions from game variable
-    [0, 800],
-    [0, 600]
-  )
-
-  player[0] = plyPos[0]
-  player[1] = plyPos[1]
-
-  // TODO: Get walls from tile neighbors
-  alignedGrid
-    .filter(t => t[4] === TileType.Wall)
-    .forEach(w => {
-      // TODO:
-      // player = resolveAabbCollision(player, w)
-    })
-
-  shouldRedraw = true
+  tryMoveInner(mover, dr)
 }
 
 const step = (t, dt) => {
   // TODO:
 
-  stepPlayer(dt)
-  //stepEntities(dt)
+  player.step(dt)
+  // entities.forEach(e => e.step())
 
-  //flushInputBuffer()
+  //InputBuffer.flush()
 }
 
 function loop(t) {
@@ -210,7 +111,7 @@ function loop(t) {
   this.last = t
 
   step(t, dt)
-  draw(this.canvas, this.canvasCtx)
+  draw(this.canvas, this.canvasCtx, dt)
 
   window.requestAnimationFrame(loop.bind(this))
 }
@@ -263,29 +164,31 @@ const init = (mainCanvas, mainCtx) => {
     }
 
     if (ev.key === DirKey.Down) {
-      vertical = 0
+      vertical -= 1
     }
 
     if (ev.key === DirKey.Up) {
-      vertical = 0
+      vertical += 1
     }
 
     if (ev.key === DirKey.Right) {
-      horizontal = 0
+      horizontal -= 1
     }
 
     if (ev.key === DirKey.Left) {
-      horizontal = 0
+      horizontal += 1
     }
   })
 
   mainCanvas.addEventListener("mousedown", ev => {
-    // start = player
     // end = player + range * |click - player|
-    const dir = normalize(sub([ev.x, ev.y], player))
+    const dir = Vector2.from(ev)
+      .sub(player.pos)
+      .normalized
+
     const entity = testHit(
-      player,
-      add(player, scale(dir, range)),
+      player.pos,
+      player.pos.add(dir.scale(range)),
       entities,
       mainCtx
     )
@@ -296,8 +199,6 @@ const init = (mainCanvas, mainCtx) => {
 
     ev.preventDefault()
   })
-
-  // c.addEventListener("mousemove", updateDir)
 }
 
 function main() {

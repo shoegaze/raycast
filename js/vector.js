@@ -1,11 +1,15 @@
 class Vector2 {
+  static from(vlike) {
+    return new Vector2(vlike.x, vlike.y)
+  }
+
   constructor(x, y) {
     this.x = x
     this.y = y
   }
 
   get magnitude() {
-    Math.sqrt(this.x * this.x + this.y * this.y)
+    return Math.sqrt(this.x * this.x + this.y * this.y)
   }
 
   get normalized() {

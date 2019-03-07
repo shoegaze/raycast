@@ -33,8 +33,8 @@ class Rect {
 
   get center() {
     return new Vector2(
-      (this.topLeft.x + this.bottomRight.x) / 2,
-      (this.topLeft.y + this.bottomRight.y) / 2
+      this.topLeft.x + this.width / 2,
+      this.topLeft.y + this.height / 2
     )
   }
 
@@ -48,6 +48,14 @@ class Rect {
 
   toString() {
     return `(${this.topLeft.toString()}, ${this.bottomRight.toString})`
+  }
+
+  atPosition(v) {
+    return new Rect(
+      v,
+      this.width,
+      this.height
+    )
   }
 
   translate(v) {

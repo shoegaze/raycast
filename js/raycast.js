@@ -72,12 +72,6 @@ const getNextMultiple = (val, mult) => {
   return val + mult - (val % mult)
 }
 
-const dist = (a, b) => {
-  const dx = b[0] - a[0]
-  const dy = b[1] - a[1]
-  return Math.sqrt(dx * dx + dy * dy)
-}
-
 const solveX = (y, a, b, c) => -(b * y + c) / a
 const solveY = (x, a, b, c) => -(a * x + c) / b
 const getX = (x0, i) => x0 + i * gridResolution
@@ -144,13 +138,13 @@ function testHit(start, end, entities, ctx) {
 
   // DEBUG:
   const drawIntersections = (x0, y0, a, b, c) => {
-    const xmax = Math.max(start[0], end[0])
+    const xmax = Math.max(start.x, end.x)
     for (let i = 0, x = getX(x0, i); x <= xmax; i++, x = getX(x0, i)) {
       const y = solveY(x, a, b, c)
       drawIntersection(x, y, 2)
     }
 
-    const ymax = Math.max(start[1], end[1])
+    const ymax = Math.max(start.y, end.y)
     for (let j = 0, y = getY(y0, j); y <= ymax; j++, y = getY(y0, j)) {
       const x = solveX(y, a, b, c)
       drawIntersection(x, y, 2)
@@ -160,9 +154,10 @@ function testHit(start, end, entities, ctx) {
   // DEBUG:
   const drawEnds = (start, end, ctx) => {
     ctx.beginPath()
-    ctx.moveTo(start[0], start[1])
-    ctx.lineTo(end[0], end[1])
+    ctx.moveTo(start.x, start.y)
+    ctx.lineTo(end.x, end.y)
     ctx.strokeStyle = "black"
+    ctx.closePath()
     ctx.stroke()
   }
 
@@ -184,16 +179,16 @@ function testHit(start, end, entities, ctx) {
   //  -> c = -(ax + by)
   //  -> y = -(ax + c) / b
   //  -> x = -(by + c) / a
-  const a = start[1] - end[1]
-  const b = end[0] - start[0]
-  const c = -(a * start[0] + b * start[1])
+  const a = start.y - end.y
+  const b = end.x - start.x
+  const c = -(a * start.x + b * start.y)
   // Math.min so we can ascend from min to max
-  const x0 = getNextMultiple(Math.min(start[0], end[0]), gridResolution)
-  const y0 = getNextMultiple(Math.min(start[1], end[1]), gridResolution)
+  const x0 = getNextMultiple(Math.min(start.x, end.x), gridResolution)
+  const y0 = getNextMultiple(Math.min(start.y, end.y), gridResolution)
 
   // TODO: Refactor loops into a function
   let adj = []
-  const xmax = Math.max(start[0], end[0])
+  const xmax = Math.max(start.x, end.x)
   for (let i = 0, x = getX(x0, i); x <= xmax; i++, x = getX(x0, i)) {
     const y = solveY(x, a, b, c)
 
@@ -202,7 +197,7 @@ function testHit(start, end, entities, ctx) {
     )
   }
 
-  const ymax = Math.max(start[1], end[1])
+  const ymax = Math.max(start.y, end.y)
   for (let j = 0, y = getY(y0, j); y <= ymax; j++, y = getY(y0, j)) {
     const x = solveX(y, a, b, c)
 
@@ -218,10 +213,11 @@ function testHit(start, end, entities, ctx) {
 
   const hit = adj
     .filter(t => t[4] === TileType.Wall)
-    .sort((a, b) => dist(start, a) - dist(start, b))
+    .sort((a, b) => start.dist(a) - start.dist(b))
 
   // New end point
-  const lim = (hit.length > 0) ? hit[0] : end
+  const lim = (hit.length > 0) ?
+    new Vector2(hit[0][0], hit[0][1]) : end
 
   const isValueBetween = (v, a, b) => Math.sign(v - a) !== Math.sign(v - b)
   const isPointInRectangle = (x, y, rx0, ry0, rx1, ry1) => {
@@ -232,12 +228,12 @@ function testHit(start, end, entities, ctx) {
   // Assume rx1 >= rx0, ry1 >= ry0
   const doesLineHitRectangle = (start, end, rx0, ry0, rx1, ry1) => {
     const pointBetweenPoints = (x, y) => {
-      return isPointInRectangle(x, y, start[0], start[1], end[0], end[1])
+      return isPointInRectangle(x, y, start.x, start.y, end.x, end.y)
     }
 
-    // const a = start[1] - end[1]
-    // const b = end[0] - start[0]
-    // const c = -(a * start[0] + b * start[1])
+    // const a = start.y - end.y
+    // const b = end.x - start.x
+    // const c = -(a * start.x + b * start.y)
     const leftY = solveY(rx0, a, b, c)
     const rightY = solveY(rx1, a, b, c)
     const topX = solveX(ry0, a, b, c)
@@ -258,7 +254,7 @@ function testHit(start, end, entities, ctx) {
     const ry1 = e[1] + e[5]
 
     if (doesLineHitRectangle(start, lim, rx0, ry0, rx1, ry1)) {
-      const d = dist(start, [e[0], e[1]])
+      const d = start.dist(new Vector2(e[0], e[1]))
       if (d < minDist) {
         minDist = d
         closest = e
@@ -283,6 +279,11 @@ function testHit(start, end, entities, ctx) {
   return closest
 }
 
+function overlapsWall(entity) {
+  // return alignedGrid
+  //   .map(c => c.filter(t => t === TileType.Wall))
+  //   .find(w => )
+}
 
 // Set up tiles
 // DEBUG:
@@ -295,90 +296,3 @@ for (let j = 4; j <= 10; j++) {
   alignedGrid[4][j] = TileType.Wall
   alignedGrid[12][j] = TileType.Wall
 }
-
-
-
-
-/*
-class Vector2 {
-  constructor(x, y) {
-    this.x = x
-    this.y = y
-  }
-
-  toString() {
-    return `(${this.x}, ${this.y})`
-  }
-
-  equals(other) {
-    return this.x === other.x && this.y === other.y
-  }
-
-  get negated() {
-    return new Vector2(-this.x, -this.y)
-  }
-
-  add(other) {
-    return new Vector2(this.x + other.x, this.y + other.y)
-  }
-
-  subtract(other) {
-    return this.add(other.negated)
-  }
-
-  dist(other) {
-    const dx = other.x - this.x
-    const dy = other.y - this.y
-    return Math.sqrt(dx * dx + dy * dy)
-  }
-}
-
-// TODO: Move functions to classes:
-/*
-class Line {
-  constructor(start, end) {
-    this.start = start
-    this.end = end
-    // Use the standard form of a line:
-    // ax + by + c = 0
-    //  -> a = start.y - end.y (flip because y axis is down)
-    //  -> b = end.x - start.x
-    //  -> c = -(ax + by)
-    //  -> x = -(by + c) / a
-    //  -> y = -(ax + c) / b
-    this.a = start.y - end.y
-    this.b = end.x - start.x
-    this.c = -(this.a * start.x + this.b * start.y)
-  }
-
-  solveX(y) {
-    return -(this.b * y + this.c) / this.a
-  }
-
-  solveY(x) {
-    return -(this.a * x + this.c) / this.b
-  }
-}
-
-class World {
-  constructor(width, height, tileSize) {
-    // right = +i
-    // down  = +j
-    this.data = Array
-      .from({length: Math.floor(width / tileSize)})
-      .map(() =>
-        Array
-          .from({length: Math.floor(height / tileSize)})
-          .map(() => TileType.Empty)
-      )
-  }
-
-  getTileOrNull(i, j) {
-    if (typeof world[i] === "undefined" || typeof world[i][j] === "undefined") {
-      return null
-    }
-
-    return world[i][j]
-  }
-}
-*/

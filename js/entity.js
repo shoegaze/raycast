@@ -43,8 +43,9 @@ class Player extends Entity {
       .normalized
       .scale(speed * dt)
 
-    player.move(dir)
+    this.move(dir)
 
+    // collision: on
     //player.tryMove(dir)
 
     shouldRedraw = true
@@ -53,10 +54,10 @@ class Player extends Entity {
   draw(ctx, dt) {
     ctx.beginPath()
     ctx.rect(
-      player.rect.topLeft.x,
-      player.rect.topLeft.y,
-      player.rect.width,
-      player.rect.height
+      this.rect.topLeft.x,
+      this.rect.topLeft.y,
+      this.rect.width,
+      this.rect.height
     )
     ctx.fillStyle = "green"
     ctx.fill()
@@ -74,6 +75,15 @@ class Enemy extends Entity {
   }
 
   draw(ctx, dt) {
-    // ...
+    ctx.beginPath()
+    ctx.rect(
+      this.rect.topLeft.x,
+      this.rect.topLeft.y,
+      this.rect.width,
+      this.rect.height
+    )
+    ctx.fillStyle = "red"
+    ctx.fill()
+    ctx.stroke()
   }
 }

@@ -1,6 +1,6 @@
 class Vector2 {
-  static from(vlike) {
-    return new Vector2(vlike.x, vlike.y)
+  static from({x, y}) {
+    return new Vector2(x, y)
   }
 
   constructor(x, y) {

@@ -2,19 +2,9 @@
 const width = 800
 const height = 600
 const gridResolution = 25
-const TileType = Object.freeze({
-  Empty: 0,
-  Wall:  1,
-})
 
 // TODO: alignedGrid.initialize(data)
-const alignedGrid = Array
-  .from({length: Math.floor(width / gridResolution)})
-  .map(() =>
-    Array
-      .from({length: Math.floor(height / gridResolution)})
-      .map(() => TileType.Empty)
-  )
+const alignedGrid = new AlignedGrid(width, height, gridResolution).grid
 
 // DEBUG:
 function drawGrid(ctx) {
@@ -213,11 +203,11 @@ function testHit(start, end, entities, ctx) {
 
   const hit = adj
     .filter(t => t[4] === TileType.Wall)
+    .map(t => new Vector2(t[0], t[1]))
     .sort((a, b) => start.dist(a) - start.dist(b))
 
   // New end point
-  const lim = (hit.length > 0) ?
-    new Vector2(hit[0][0], hit[0][1]) : end
+  const lim = (hit.length > 0) ? hit[0] : end
 
   const isValueBetween = (v, a, b) => Math.sign(v - a) !== Math.sign(v - b)
   const isPointInRectangle = (x, y, rx0, ry0, rx1, ry1) => {
@@ -248,13 +238,11 @@ function testHit(start, end, entities, ctx) {
   let minDist = Infinity
   let closest = null
   entities.forEach(e => {
-    const rx0 = e[0] + e[2]
-    const ry0 = e[1] + e[3]
-    const rx1 = e[0] + e[4]
-    const ry1 = e[1] + e[5]
+    const {x: rx0, y: ry0} = e.rect.topLeft
+    const {x: rx1, y: ry1} = e.rect.bottomRight
 
     if (doesLineHitRectangle(start, lim, rx0, ry0, rx1, ry1)) {
-      const d = start.dist(new Vector2(e[0], e[1]))
+      const d = start.dist(e.pos)
       if (d < minDist) {
         minDist = d
         closest = e
@@ -264,26 +252,21 @@ function testHit(start, end, entities, ctx) {
 
   // DEBUG:
   if (closest) {
-    console.log(`hit entity at (${closest[0]}, ${closest[1]})`)
+    console.log(`hit entity at ${closest.pos.toString()}`)
   }
 
   // DEBUG:
   if (ctx) {
     drawEnds(start, lim, ctx)
     drawIntersections(x0, y0, a, b, c)
-    adj.forEach(v => {
-      markTile(v[2], v[3], gridResolution)
+    adj.forEach(t => {
+      markTile(t[2], t[3], gridResolution)
     })
   }
 
   return closest
 }
 
-function overlapsWall(entity) {
-  // return alignedGrid
-  //   .map(c => c.filter(t => t === TileType.Wall))
-  //   .find(w => )
-}
 
 // Set up tiles
 // DEBUG:

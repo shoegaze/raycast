@@ -1,4 +1,3 @@
-// [x, y, left x offset, left y offset, right x offset, right y offset]
 let player = new Player(new Vector2(25, 25), 20, 20)
 let range = 200
 let speed = 0.15
@@ -10,17 +9,8 @@ let vertical = 0
 let shouldRedraw = true
 
 const entities = [
-  // [
-  //  x,
-  //  y,
-  //  top left x offset,
-  //  top left y offset,
-  //  bottom right x offset,
-  //  bottom right y offset
-  // ]
-  // TODO: move to new Entity class
-  [200, 200, -10, -10, 10, 10],
-  [275, 200, -10, -10, 10, 10]
+  new Enemy(new Vector2(200, 200), 20, 20),
+  new Enemy(new Vector2(275, 200), 20, 20)
 ]
 
 const DirKey = Object.freeze({
@@ -36,25 +26,6 @@ const clearScreen = (c, ctx) => {
   ctx.clearRect(0, 0, c.width, c.height)
 }
 
-const drawPlayer = ctx => {
-  player.draw(ctx)
-}
-
-const drawEntities = ctx => {
-  entities.forEach(e => {
-    ctx.beginPath()
-    ctx.rect(
-      e[0] + e[2],
-      e[1] + e[3],
-      e[4] - e[2],
-      e[5] - e[3]
-    )
-    ctx.fillStyle = "red"
-    ctx.fill()
-    ctx.stroke()
-  })
-}
-
 function draw(c, ctx, dt) {
   if (shouldRedraw) {
     clearScreen(c, ctx)
@@ -62,7 +33,7 @@ function draw(c, ctx, dt) {
     drawTiles(ctx)
 
     player.draw(ctx)
-    drawEntities(ctx)
+    entities.forEach(e => e.draw(ctx, dt))
 
     shouldRedraw = false
   }
@@ -101,7 +72,7 @@ const step = (t, dt) => {
   // TODO:
 
   player.step(dt)
-  // entities.forEach(e => e.step())
+  entities.forEach(e => e.step())
 
   //InputBuffer.flush()
 }

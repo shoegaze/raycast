@@ -21,6 +21,10 @@ class Vector2 {
     return this.x === 0 && this.y === 0
   }
 
+  toString() {
+    return `(${this.x}, ${this.y})`
+  }
+
   scale(s) {
     return new Vector2(this.x * s, this.y * s)
   }

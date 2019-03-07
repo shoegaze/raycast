@@ -15,6 +15,14 @@ class Rect {
     return RectSide
   }
 
+  static CenteredRect(pos, w, h) {
+    return new Rect(
+      new Vector2(pos.x - w/2, pos.y - h/2),
+      w,
+      h
+    )
+  }
+
   constructor(topLeft, width, height) {
     this.topLeft = topLeft
     this.bottomRight = new Vector2(
@@ -36,6 +44,18 @@ class Rect {
 
   get height() {
     return Math.abs(this.bottomRight.y - this.topLeft.y)
+  }
+
+  toString() {
+    return `(${this.topLeft.toString()}, ${this.bottomRight.toString})`
+  }
+
+  translate(v) {
+    return new Rect(
+      this.topLeft.add(v),
+      this.width,
+      this.height
+    )
   }
 
   centeredAt(pos) {
